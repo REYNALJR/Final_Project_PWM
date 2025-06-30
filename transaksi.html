@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head> 
+  <link rel="icon" href="icon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tambah Transaksi - WarungQ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    ➕ Tambah Transaksi
+  </header>
+
+  <main>
+    <div class="card">
+      <form id="formTransaksi">
+      <label for="jenisTransaksi">Jenis Transaksi:</label>
+      <select id="jenisTransaksi" required>
+        <option value="pemasukan">Pemasukan</option>
+        <option value="pengeluaran">Pengeluaran</option>
+      </select>
+
+      <label for="namaBarang">Nama Barang:</label>
+      <input type="text" id="namaBarang" required />
+
+      <label for="jumlah">Jumlah:</label>
+      <input type="number" id="jumlah" min="1" required />
+
+      <label for="harga">Harga Satuan (Rp):</label>
+      <input type="number" id="harga" min="0" required />
+
+      <label for="keterangan">Keterangan / Satuan:</label>
+      <input type="text" id="keterangan" placeholder="Contoh: per bungkus, per dus" />
+
+
+      <button type="submit">💾 Simpan Transaksi</button>
+    </form>
+
+    </div>
+  </main>
+
+  <nav class="nav">
+    <a href="index.html">🏠 Beranda</a>
+    <a href="transaksi.html" class="active">➕ Tambah Transaksi</a>
+    <a href="riwayat.html">📜 Riwayat Transaksi</a>
+    <a href="laporan.html">📊 Laporan</a>
+  </nav>
+
+  <script>
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("formTransaksi").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const jenis = document.getElementById("jenisTransaksi").value;
+      const nama = document.getElementById("namaBarang").value.trim();
+      const jumlah = parseInt(document.getElementById("jumlah").value);
+      const harga = parseInt(document.getElementById("harga").value);
+      const tanggal = new Date().toISOString().split("T")[0];
+
+      if (!nama || isNaN(jumlah) || isNaN(harga)) {
+        alert("Harap isi semua field dengan benar.");
+        return;
+      }
+
+      let total = jumlah * harga;
+      if (jenis === "pengeluaran") {
+        total *= -1;
+      }
+
+      const transaksiBaru = { nama, jumlah, harga, total, tanggal };
+
+      const username = localStorage.getItem("usernameAktif");
+      const key = `transaksi_${username}`;
+      const data = JSON.parse(localStorage.getItem(key)) || [];
+
+      data.push(transaksiBaru);
+      localStorage.setItem(key, JSON.stringify(data));
+
+      alert("✅ Transaksi berhasil disimpan.");
+      document.getElementById("formTransaksi").reset();
+    });
+  </script>
+
+  <script>
+  // Terapkan mode gelap jika sebelumnya dipilih
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+  }
+</script>
+
+</body>
+</html>

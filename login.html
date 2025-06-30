@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" href="icon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - WarungQ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>🔐 Login ke WarungQ</header>
+
+  <main>
+    <div class="card">
+      <form id="formLogin">
+        <label for="username">Username</label>
+        <input type="text" id="username" required />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" required />
+
+        <button type="submit">Masuk</button>
+        <p style="text-align:center; margin-top:10px;">
+          Belum punya akun? <a href="register.html">Daftar</a> |
+          <a href="reset.html">Reset Password</a>
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById("formLogin").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      const akun = JSON.parse(localStorage.getItem("akunUsers")) || [];
+      const cocok = akun.find(user => user.username === username && user.password === password);
+
+      if (cocok) {
+        localStorage.setItem("loggedIn", true);
+        localStorage.setItem("usernameAktif", username);
+        window.location.href = "index.html";
+      } else {
+        alert("Username atau password salah!");
+      }
+    });
+
+    if (localStorage.getItem("loggedIn")) {
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

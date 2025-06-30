@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head> 
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Riwayat Transaksi - WarungQ</title>
+  <link rel="icon" href="icon.png">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+    }
+    .modal-content input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+    .modal-content button {
+      padding: 10px 15px;
+      margin-top: 10px;
+    }
+    .action-buttons button {
+      margin-right: 8px;
+    }
+  </style>
+
+  <script>
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "login.html";
+    }
+  </script>
+</head>
+
+<body>
+  <header>📜 Riwayat Transaksi</header>
+
+  <main>
+    <div class="card">
+      <h2>🔎 Filter Transaksi</h2>
+      <input type="text" id="cariNama" placeholder="Cari nama barang..." />
+      <input type="date" id="filterTanggal" />
+    </div>
+
+    <div id="daftarTransaksi" class="card">
+      <!-- Daftar transaksi akan ditampilkan di sini -->
+    </div>
+  </main>
+
+  <nav class="nav">
+    <a href="index.html">🏠 Beranda</a>
+    <a href="transaksi.html">➕ Tambah Transaksi</a>
+    <a href="riwayat.html" class="active">📜 Riwayat Transaksi</a>
+    <a href="laporan.html">📊 Laporan</a>
+  </nav>
+
+  <!-- Modal Edit Transaksi -->
+  <div id="modalEdit" class="modal">
+    <div class="modal-content">
+      <h3>Edit Transaksi</h3>
+      <form id="formEdit">
+        <input type="hidden" id="editIndex" />
+        <label>Nama Barang:</label>
+        <input type="text" id="editNama" required />
+        <label>Jumlah:</label>
+        <input type="number" id="editJumlah" min="1" required />
+        <label>Harga:</label>
+        <input type="number" id="editHarga" min="0" required />
+        <label>Keterangan Satuan:</label>
+        <input type="text" id="editKeterangan" placeholder="cth: per bungkus / per rak" />
+        <div style="text-align: right;">
+          <button type="button" onclick="tutupModal()">Batal</button>
+          <button type="submit">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const username = localStorage.getItem("usernameAktif");
+    const transaksi = JSON.parse(localStorage.getItem(`transaksi_${username}`)) || [];
+    const daftar = document.getElementById("daftarTransaksi");
+    const cariNama = document.getElementById("cariNama");
+    const filterTanggal = document.getElementById("filterTanggal");
+
+    function tampilkanData(filterNama = "", tanggal = "") {
+      daftar.innerHTML = "";
+
+      const data = transaksi.filter(t => {
+        const cocokNama = t.nama.toLowerCase().includes(filterNama.toLowerCase());
+        const cocokTanggal = tanggal ? t.tanggal === tanggal : true;
+        return cocokNama && cocokTanggal;
+      });
+
+      if (data.length === 0) {
+        daftar.innerHTML = "<p>Tidak ada data yang cocok.</p>";
+        return;
+      }
+
+      data.forEach((t, index) => {
+        const item = document.createElement("div");
+        item.className = "card";
+        item.innerHTML = `
+          <strong>${t.nama}</strong><br/>
+          Jenis: ${t.total > 0 ? "Pemasukan" : "Pengeluaran"}<br/>
+          Jumlah: ${t.jumlah} x Rp${t.harga.toLocaleString("id-ID")}<br/>
+          ${t.keterangan ? `Keterangan: ${t.keterangan}<br/>` : ""}
+          Total: <strong>Rp${Math.abs(t.total).toLocaleString("id-ID")}</strong><br/>
+          Tanggal: ${t.tanggal}<br/>
+          <div class="action-buttons">
+            <button onclick="bukaEdit(${index})">✏️ Edit</button>
+            <button onclick="hapusTransaksi(${index})">🗑️ Hapus</button>
+          </div>
+        `;
+        daftar.appendChild(item);
+      });
+    }
+
+    cariNama.addEventListener("input", () => tampilkanData(cariNama.value, filterTanggal.value));
+    filterTanggal.addEventListener("change", () => tampilkanData(cariNama.value, filterTanggal.value));
+
+    tampilkanData(); // tampilkan data awal
+
+    function bukaEdit(index) {
+      const data = transaksi[index];
+      document.getElementById("editIndex").value = index;
+      document.getElementById("editNama").value = data.nama;
+      document.getElementById("editJumlah").value = data.jumlah;
+      document.getElementById("editHarga").value = data.harga;
+      document.getElementById("editKeterangan").value = data.keterangan || "";
+      document.getElementById("modalEdit").style.display = "flex";
+    }
+
+    function tutupModal() {
+      document.getElementById("modalEdit").style.display = "none";
+    }
+
+    document.getElementById("formEdit").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const index = parseInt(document.getElementById("editIndex").value);
+      const nama = document.getElementById("editNama").value;
+      const jumlah = parseInt(document.getElementById("editJumlah").value);
+      const harga = parseInt(document.getElementById("editHarga").value);
+      const keterangan = document.getElementById("editKeterangan").value.trim();
+      const jenis = transaksi[index].total > 0 ? "pemasukan" : "pengeluaran";
+      const tanggal = transaksi[index].tanggal;
+      const total = (jenis === "pengeluaran" ? -1 : 1) * (jumlah * harga);
+
+      transaksi[index] = { nama, jumlah, harga, keterangan, total, tanggal };
+      localStorage.setItem(`transaksi_${username}`, JSON.stringify(transaksi));
+      tampilkanData(cariNama.value, filterTanggal.value);
+      tutupModal();
+      alert("✅ Transaksi berhasil diperbarui!");
+    });
+
+    function hapusTransaksi(index) {
+      const konfirmasi = confirm("Apakah Anda yakin ingin menghapus transaksi ini?");
+      if (konfirmasi) {
+        transaksi.splice(index, 1);
+        localStorage.setItem(`transaksi_${username}`, JSON.stringify(transaksi));
+        tampilkanData(cariNama.value, filterTanggal.value);
+        alert("🗑️ Transaksi berhasil dihapus!");
+      }
+    }
+
+    // Tutup modal jika klik di luar
+    window.addEventListener("click", function(event) {
+      if (event.target === document.getElementById("modalEdit")) {
+        tutupModal();
+      }
+    });
+  </script>
+
+  <script>
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head> 
+  <link rel="icon" href="icon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password - WarungQ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>🔒 Reset Password</header>
+
+  <main>
+    <div class="card">
+      <form id="resetForm">
+        <label for="username">Username</label>
+        <input type="text" id="username" required />
+
+        <label for="newPassword">Password Baru</label>
+        <input type="password" id="newPassword" required />
+
+        <button type="submit">Reset Password</button>
+        <p style="text-align:center; margin-top:10px;">
+          Ingat akun? <a href="login.html">Login</a>
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById("resetForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const newPassword = document.getElementById("newPassword").value;
+
+      let akun = JSON.parse(localStorage.getItem("akunUsers")) || [];
+      const index = akun.findIndex(user => user.username === username);
+
+      if (index === -1) {
+        alert("Username tidak ditemukan!");
+        return;
+      }
+
+      akun[index].password = newPassword;
+      localStorage.setItem("akunUsers", JSON.stringify(akun));
+      alert("Password berhasil diperbarui!");
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head> 
+  <link rel="icon" href="icon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Laporan Keuangan - WarungQ</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .progress-container {
+      background: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 24px;
+      margin: 10px 0;
+    }
+    .progress-bar {
+      height: 100%;
+      color: white;
+      text-align: center;
+      line-height: 24px;
+      font-weight: bold;
+    }
+    .bar-pemasukan {
+      background-color: #2ecc71;
+    }
+    .bar-pengeluaran {
+      background-color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    📊 Laporan Keuangan
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Ringkasan Keuangan</h2>
+      <ul style="list-style: none; padding: 0;">
+        <li><strong>Pemasukan:</strong> <span id="lapPemasukan">Rp0</span></li>
+        <li><strong>Pengeluaran:</strong> <span id="lapPengeluaran">Rp0</span></li>
+        <li><strong>Keuntungan:</strong> <span id="lapKeuntungan">Rp0</span></li>
+        <li><strong>Total Transaksi:</strong> <span id="lapTotal">0 transaksi</span></li>
+      </ul>
+
+      <h3>Visualisasi</h3>
+      <div class="progress-container">
+        <div id="barPemasukan" class="progress-bar bar-pemasukan" style="width: 0%">0%</div>
+      </div>
+      <div class="progress-container">
+        <div id="barPengeluaran" class="progress-bar bar-pengeluaran" style="width: 0%">0%</div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="nav">
+    <a href="index.html">🏠 Beranda</a>
+    <a href="transaksi.html">➕ Tambah Transaksi</a>
+    <a href="riwayat.html">📜 Riwayat Transaksi</a>
+    <a href="laporan.html" class="active">📊 Laporan</a>
+  </nav>
+
+  <script>
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "login.html";
+    }
+
+    const username = localStorage.getItem("usernameAktif");
+    const data = JSON.parse(localStorage.getItem(`transaksi_${username}`)) || [];
+
+    let pemasukan = 0;
+    let pengeluaran = 0;
+    let totalTransaksi = data.length;
+
+    data.forEach(t => {
+      if (t.total > 0) pemasukan += t.total;
+      else pengeluaran += Math.abs(t.total);
+    });
+
+    const keuntungan = pemasukan - pengeluaran;
+    const totalSemua = pemasukan + pengeluaran;
+    const persenPemasukan = totalSemua === 0 ? 0 : Math.round((pemasukan / totalSemua) * 100);
+    const persenPengeluaran = totalSemua === 0 ? 0 : Math.round((pengeluaran / totalSemua) * 100);
+
+    document.getElementById("lapPemasukan").textContent = `Rp${pemasukan.toLocaleString("id-ID")}`;
+    document.getElementById("lapPengeluaran").textContent = `Rp${pengeluaran.toLocaleString("id-ID")}`;
+    document.getElementById("lapKeuntungan").textContent = `Rp${keuntungan.toLocaleString("id-ID")}`;
+    document.getElementById("lapTotal").textContent = `${totalTransaksi} transaksi`;
+
+    document.getElementById("barPemasukan").style.width = persenPemasukan + "%";
+    document.getElementById("barPemasukan").textContent = persenPemasukan + "%";
+
+    document.getElementById("barPengeluaran").style.width = persenPengeluaran + "%";
+    document.getElementById("barPengeluaran").textContent = persenPengeluaran + "%";
+  </script>
+
+  <script>
+  // Terapkan mode gelap jika sebelumnya dipilih
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+  }
+  </script>
+
+</body>
+</html>

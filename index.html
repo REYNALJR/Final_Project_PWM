@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Beranda - WarungQ</title>
+
+  <!-- Ikon & Manifest -->
+  <link rel="icon" href="icon.png">
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2c3e50">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .notifikasi {
+      background-color: #f1c40f;
+      color: #333;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    .notifikasi.buruk {
+      background-color: #e74c3c;
+      color: #fff;
+    }
+    .notifikasi.baik {
+      background-color: #2ecc71;
+      color: #fff;
+    }
+  </style>
+
+  <script>
+    if (!localStorage.getItem("loggedIn") || localStorage.getItem("loggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    WarungQ
+    <p>Manajemen Warung Digital Sederhana</p>
+    <div id="infoAkun" style="margin-top: 5px; font-size: 0.9rem; color: #eee;"></div>
+  </header>
+
+  <main>
+    <!-- Ringkasan Keuangan -->
+    <div class="card">
+      <div id="notifikasi"></div>
+      <h2>Ringkasan Keuangan</h2>
+      <ul style="list-style: none; padding-left: 0;">
+        <li><strong>Pemasukan:</strong> <span id="pemasukan">Rp0</span></li>
+        <li><strong>Pengeluaran:</strong> <span id="pengeluaran">Rp0</span></li>
+        <li><strong>Keuntungan:</strong> <span id="keuntungan">Rp0</span></li>
+      </ul>
+    </div>
+
+    <!-- Tombol Install -->
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="installBtn" style="display:none;">📲 Install Aplikasi</button>
+    </div>
+
+    <!-- Dark Mode -->
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="toggleTheme">🌙 Dark Mode</button>
+    </div>
+
+    <!-- Logout -->
+    <div style="text-align: center; margin-top: 15px;">
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
+  </main>
+
+  <!-- Navigasi -->
+  <nav class="nav">
+    <a href="index.html" class="active">🏠 Beranda</a>
+    <a href="transaksi.html">➕ Tambah Transaksi</a>
+    <a href="riwayat.html">📜 Riwayat Transaksi</a>
+    <a href="laporan.html">📊 Laporan</a>
+  </nav>
+
+  <!-- Script: Ringkasan -->
+  <script>
+    const username = localStorage.getItem("usernameAktif");
+    const data = JSON.parse(localStorage.getItem(`transaksi_${username}`)) || [];
+
+    let pemasukan = 0;
+    let pengeluaran = 0;
+
+    data.forEach(t => {
+      if (t.total > 0) {
+        pemasukan += t.total;
+      } else {
+        pengeluaran += Math.abs(t.total);
+      }
+    });
+
+    const keuntungan = pemasukan - pengeluaran;
+    document.getElementById("pemasukan").textContent = "Rp" + pemasukan.toLocaleString("id-ID");
+    document.getElementById("pengeluaran").textContent = "Rp" + pengeluaran.toLocaleString("id-ID");
+    document.getElementById("keuntungan").textContent = "Rp" + keuntungan.toLocaleString("id-ID");
+
+    const notifikasiDiv = document.getElementById("notifikasi");
+    if (pemasukan === 0 && pengeluaran === 0) {
+      notifikasiDiv.textContent = "Belum ada transaksi keuangan.";
+      notifikasiDiv.classList.add("notifikasi");
+    } else if (pengeluaran > pemasukan) {
+      notifikasiDiv.textContent = "⚠️ Pengeluaran melebihi pemasukan. Periksa kembali keuangan Anda.";
+      notifikasiDiv.classList.add("notifikasi", "buruk");
+    } else if (keuntungan <= 10000) {
+      notifikasiDiv.textContent = "⚠️ Keuntungan sangat minim. Coba tingkatkan penjualan!";
+      notifikasiDiv.classList.add("notifikasi");
+    } else {
+      notifikasiDiv.textContent = "✅ Keuangan dalam kondisi baik!";
+      notifikasiDiv.classList.add("notifikasi", "baik");
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      localStorage.removeItem("usernameAktif");
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <!-- Script: Install -->
+  <script>
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    // Status install per perangkat
+    const sudahInstallPerangkat = localStorage.getItem("sudahInstallPerangkat") === 'true';
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      if (!sudahInstallPerangkat) {
+        installBtn.style.display = 'inline-block';
+      }
+    });
+
+    installBtn.addEventListener('click', () => {
+      if (!deferredPrompt) return;
+
+      installBtn.style.display = 'none';
+      deferredPrompt.prompt();
+
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ User accepted the A2HS prompt');
+          localStorage.setItem("sudahInstallPerangkat", "true");
+        } else {
+          console.log('❌ User dismissed the A2HS prompt');
+        }
+        deferredPrompt = null;
+      });
+    });
+  </script>
+
+  <!-- Script: Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service worker registered'))
+        .catch(err => console.error('❌ Gagal daftar service worker:', err));
+    }
+  </script>
+
+  <!-- Dark Mode -->
+  <script>
+    const savedTheme = localStorage.getItem('theme');
+    const body = document.body;
+    const toggleBtn = document.getElementById('toggleTheme');
+
+    if (savedTheme === 'dark') {
+      body.classList.add('dark');
+      toggleBtn.textContent = '☀️ Light Mode';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      body.classList.toggle('dark');
+      const isDark = body.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      toggleBtn.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+    });
+  </script>
+
+  <!-- Info Akun -->
+  <script>
+    const infoAkun = document.getElementById("infoAkun");
+    if (infoAkun && username) {
+      infoAkun.textContent = "👤 Login sebagai: " + username;
+    }
+  </script>
+</body>
+</html>

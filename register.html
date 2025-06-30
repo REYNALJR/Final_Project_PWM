@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" href="icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Akun - WarungQ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>📝 Daftar Akun Baru</header>
+
+  <main>
+    <div class="card">
+      <form id="registerForm">
+        <label for="newUsername">Username</label>
+        <input type="text" id="newUsername" required>
+
+        <label for="newPassword">Password</label>
+        <input type="password" id="newPassword" required>
+
+        <button type="submit">Buat Akun</button>
+        <p style="text-align:center; margin-top:10px;">
+          Sudah punya akun? <a href="login.html">Login</a>
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const username = document.getElementById("newUsername").value.trim();
+      const password = document.getElementById("newPassword").value;
+
+      if (!username || !password) {
+        alert("Harap isi semua kolom!");
+        return;
+      }
+
+      let akun = JSON.parse(localStorage.getItem("akunUsers")) || [];
+      if (akun.find(user => user.username === username)) {
+        alert("Username sudah digunakan!");
+        return;
+      }
+
+      akun.push({ username, password });
+      localStorage.setItem("akunUsers", JSON.stringify(akun));
+      alert("Akun berhasil dibuat! Silakan login.");
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>
